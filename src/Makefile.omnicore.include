@@ -30,7 +30,7 @@ OMNICORE_H = \
   omnicore/tally.h \
   omnicore/tx.h \
   omnicore/uint256_extensions.h \
-  omnicore/utdb,h \
+  omnicore/utdb.h \
   omnicore/utils.h \
   omnicore/utilsbitcoin.h \
   omnicore/version.h \
