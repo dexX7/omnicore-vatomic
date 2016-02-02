@@ -24,6 +24,7 @@
 #include "omnicore/sp.h"
 #include "omnicore/tally.h"
 #include "omnicore/tx.h"
+#include "omnicore/utdb.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/version.h"
 
@@ -386,6 +387,142 @@ Value mscrpc(const Array& params, bool fHelp)
             break;
         }
 #endif
+        case 12: // display the whole CMPTxList (leveldb)
+        {
+            LOCK(cs_tally);
+            p_utdb->printAll();
+            p_utdb->printStats();
+            break;
+        }
+        case 13: // perform test functions on utdb - testing - note alice/bob/charles etc are placeholders for addresses
+        {
+            LOCK(cs_tally);
+            p_utdb->Clear();
+
+            /* Test A:
+             * - Create 1000 tokens of prop 50 and assign them to address 'Alice'
+             * - Check that returned range is 1,1000
+             * - Check that the owner of token ID 1 of prop 50 is address 'Alice'
+             * - Check that the owner of token ID 1000 of prop 50 is address 'Alice'
+             * - Check that the owner of token ID 454 of prop 50 is address 'Alice'
+             */
+            std::pair<int64_t,int64_t> testA = p_utdb->CreateUniqueTokens(50,1000,"Alice");
+            std::string testAOwner_A = p_utdb->GetUniqueTokenOwner(50,1);
+            std::string testAOwner_B = p_utdb->GetUniqueTokenOwner(50,1000);
+            std::string testAOwner_C = p_utdb->GetUniqueTokenOwner(50,454);
+            std::string passA = "failed";
+            if (testA.first == 1 && testA.second == 1000 && testAOwner_A == "Alice" && testAOwner_B == "Alice" && testAOwner_C == "Alice") passA = "passed";
+            PrintToConsole("Test A %s (%d,%d,%s,%s,%s)\n", passA, testA.first, testA.second, testAOwner_A, testAOwner_B, testAOwner_C);
+
+            /* Test B:
+             * - Create another 1000 tokens of prop 50 and assign them to address 'Alice'
+             * - Check that the returned range is 1001,2000
+             * - Check that the owner of token ID 1001 of prop 50 is address 'Alice'
+             * - Check that the owner of token ID 2000 of prop 50 is address 'Alice'
+             * - Check that the ranges were merged and address 'Alice' owns a contigous range 1-2000
+             */
+            std::pair<int64_t,int64_t> testB = p_utdb->CreateUniqueTokens(50,1000,"Alice");
+            std::string testBOwner_A = p_utdb->GetUniqueTokenOwner(50,1001);
+            std::string testBOwner_B = p_utdb->GetUniqueTokenOwner(50,2000);
+            bool testBContiguous = p_utdb->IsRangeContiguous(50,1,2000);
+            std::string passB = "failed";
+            if (testB.first == 1001 && testB.second == 2000 && testBOwner_A == "Alice" && testBOwner_B == "Alice" && testBContiguous) passB = "passed";
+            PrintToConsole("Test B %s (%d,%d,%s,%s,%d)\n", passB, testB.first, testB.second, testBOwner_A, testBOwner_B, testBContiguous);
+
+            /* Test C:
+             * - Create another 1000 tokens of prop 50 and assign them to address 'Bob'
+             * - Check that the returned range is 2001,3000
+             * - Check that the owner of token ID 2001 of prop 50 is address 'Bob'
+             * - Check that the owner of token ID 3000 of prop 50 is address 'Bob'
+             * - Check that the ranges were not merged (check token ID 2000-2001 is not a contiguous range)
+             */
+            std::pair<int64_t,int64_t> testC = p_utdb->CreateUniqueTokens(50,1000,"Bob");
+            std::string testCOwner_A = p_utdb->GetUniqueTokenOwner(50,2001);
+            std::string testCOwner_B = p_utdb->GetUniqueTokenOwner(50,3000);
+            bool testCContiguous = p_utdb->IsRangeContiguous(50,2000,2001);
+            std::string passC = "failed";
+            if (testC.first == 2001 && testC.second == 3000 && testCOwner_A == "Bob" && testCOwner_B == "Bob" && !testCContiguous) passC = "passed";
+            PrintToConsole("Test C %s (%d,%d,%s,%s,%d)\n", passC, testC.first, testC.second, testCOwner_A, testCOwner_B, testCContiguous);
+
+            /* Test D:
+             * - Move the entire token range 2001 to 3000 of prop 50 from address 'Bob' to address 'Charles'
+             * - Check that the move was successful
+             * - Check that the owner of token ID 2001 of prop 50 is address 'Charles'
+             * - Check that the owner of token ID 3000 of prop 50 is address 'Charles'
+             */
+            bool successD = p_utdb->MoveUniqueTokens(50,2001,3000,"Bob","Charles");
+            std::string testDOwner_A = p_utdb->GetUniqueTokenOwner(50,2001);
+            std::string testDOwner_B = p_utdb->GetUniqueTokenOwner(50,3000);
+            std::string passD = "failed";
+            if (successD && testDOwner_A == "Charles" && testDOwner_B == "Charles") passD = "passed";
+            PrintToConsole("Test D %s (%d,%s,%s)\n", passD, successD, testDOwner_A, testDOwner_B);
+
+            /* Test E:
+             * - Create another 1000 tokens of prop 50 and assign them to address 'David'
+             * - Check that the returned range is 3001,4000
+             * - Check that the owner of token ID 3001 of ptop 50 is address 'David'
+             * - Check that the owner of token ID 4000 of prop 50 is address 'David'
+             * - Check that the ranges were not merged (check token ID 3000-3001 is not a contiguous range)
+             * - Move the entire token range 3001-4000 of prop 50 from address 'David' to address 'Charles'
+             * - Check that the move was successful
+             * - Check that the owner of token ID 3001 of prop 50 is now address 'Charles'
+             * - Check that the owner of token ID 4000 of prop 50 is now address 'Charles'
+             * - Check that the ranges were merged (check token ID 3000-3001 is a contiguous range)
+             */
+            std::pair<int64_t,int64_t> testE = p_utdb->CreateUniqueTokens(50,1000,"David");
+            std::string testEOwner_A = p_utdb->GetUniqueTokenOwner(50,3001);
+            std::string testEOwner_B = p_utdb->GetUniqueTokenOwner(50,4000);
+            bool testEContiguous_A = p_utdb->IsRangeContiguous(50,3000,3001);
+            bool successE = p_utdb->MoveUniqueTokens(50,3001,4000,"David","Charles");
+            std::string testEOwner_C = p_utdb->GetUniqueTokenOwner(50,3001);
+            std::string testEOwner_D = p_utdb->GetUniqueTokenOwner(50,4000);
+            bool testEContiguous_B = p_utdb->IsRangeContiguous(50,3000,3001);
+            std::string passE = "failed";
+            if (testE.first == 3001 && testE.second == 4000 && testEOwner_A == "David" && testEOwner_B == "David" && !testEContiguous_A &&
+                successE && testEOwner_C == "Charles" && testEOwner_D == "Charles" && testEContiguous_B) passE = "passed";
+            PrintToConsole("Test E %s (%d,%d,%s,%s,%d,%d,%s,%s,%d)\n", passE,testE.first,testE.second,testEOwner_A,testEOwner_B,testEContiguous_A,successE,testEOwner_C,testEOwner_D,testEContiguous_B);
+
+
+            /* Test F:
+             * - Check that the owner of token ID 500 of prop 50 is 'Alice'
+             * - Move the individual unique token 500 of prop 50 from 'Alice' to 'Bob'
+             * - Check that the move was successful
+             * - Check that the owner of token ID 500 of prop 50 is 'Bob'
+             * - Check that address 'Alice' now owns 1-499 and 501-2000 via dump
+             * - Check that address 'Bob' now owns 500 and 2001-3000 via dump
+             */
+            std::string testFOwner_A = p_utdb->GetUniqueTokenOwner(50,500);
+            bool successF = p_utdb->MoveUniqueTokens(50,500,500,"Alice","Bob");
+            std::string testFOwner_B = p_utdb->GetUniqueTokenOwner(50,500);
+            std::string passF = "failed";
+            if (testFOwner_A == "Alice" && testFOwner_B == "Bob" && successF) passF = "passed";
+            PrintToConsole("Test F %s (%s,%d,%s)\n", passF,testFOwner_A,successF,testFOwner_B);
+            PrintToConsole("Test F verification, check 'Alice' owns 1-499 & 501-2000 and 'Bob' owns 500 in the following dump:\n");
+            p_utdb->printAll();
+
+           /* Test G:
+            * - Check that the owner of token ID 2300 of prop 50 is 'Charles'
+            * - Check that the owner of token ID 2400 of prop 50 is 'Charles'
+            * - Check that the range 2300-2400 is contiguous
+            * - Move the range of tokens 2300-2400 of prop 50 from 'Charles' to 'Bob'
+            * - Check that the move was successful
+            * - Check that the owner of token ID 2300 of prop 50 is 'Bob'
+            * - Check that the owner of token ID 2400 of prop 50 is 'Bob'
+            * - Check that the range 2300-2400 is contiguous
+            */
+            std::string testGOwner_A = p_utdb->GetUniqueTokenOwner(50,2300);
+            std::string testGOwner_B = p_utdb->GetUniqueTokenOwner(50,2400);
+            bool testGContiguous_A = p_utdb->IsRangeContiguous(50,2300,2400);
+            bool successG = p_utdb->MoveUniqueTokens(50,2300,2400,"Charles","Bob");
+            std::string testGOwner_C = p_utdb->GetUniqueTokenOwner(50,2300);
+            std::string testGOwner_D = p_utdb->GetUniqueTokenOwner(50,2400);
+            bool testGContiguous_B = p_utdb->IsRangeContiguous(50,2300,2400);
+            std::string passG = "failed";
+            if (testGOwner_A == "Charles" && testGOwner_B == "Charles" && testGContiguous_A && successG && testGOwner_C == "Bob" && testGOwner_D == "Bob" && testGContiguous_B) passG = "passed";
+            PrintToConsole("Test G %s (%s,%s,%d,%d,%s,%s,%d)\n", passG,testGOwner_A,testGOwner_B,testGContiguous_A,successG,testGOwner_C,testGOwner_D,testGContiguous_B);
+            PrintToConsole("Test G verification, check 'Charles' owns 2001-2299 & 2401-4000 and 'Bob' owns 2300-2400 in the following dump:\n");
+            p_utdb->printAll();
+        }
         default:
             break;
     }

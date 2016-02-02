@@ -23,6 +23,7 @@
 #include "omnicore/sp.h"
 #include "omnicore/tally.h"
 #include "omnicore/tx.h"
+#include "omnicore/utdb.h"
 #include "omnicore/utils.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/version.h"
@@ -134,6 +135,7 @@ static int reorgRecoveryMaxHeight = 0;
 CMPTxList *mastercore::p_txlistdb;
 CMPTradeList *mastercore::t_tradelistdb;
 CMPSTOList *mastercore::s_stolistdb;
+CMPUniqueTokensDB *mastercore::p_utdb;
 
 // indicate whether persistence is enabled at this point, or not
 // used to write/read files, for breakout mode, debugging, etc.
@@ -2615,11 +2617,13 @@ int mastercore_init()
             boost::filesystem::path tradePath = GetDataDir() / "MP_tradelist";
             boost::filesystem::path spPath = GetDataDir() / "MP_spinfo";
             boost::filesystem::path stoPath = GetDataDir() / "MP_stolist";
+            boost::filesystem::path utdbPath = GetDataDir() / "MP_utdb";
             if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath);
             if (boost::filesystem::exists(txlistPath)) boost::filesystem::remove_all(txlistPath);
             if (boost::filesystem::exists(tradePath)) boost::filesystem::remove_all(tradePath);
             if (boost::filesystem::exists(spPath)) boost::filesystem::remove_all(spPath);
             if (boost::filesystem::exists(stoPath)) boost::filesystem::remove_all(stoPath);
+            if (boost::filesystem::exists(utdbPath)) boost::filesystem::remove_all(utdbPath);
             PrintToLog("Success clearing persistence files in datadir %s\n", GetDataDir().string());
             startClean = true;
         } catch (const boost::filesystem::filesystem_error& e) {
@@ -2631,6 +2635,7 @@ int mastercore_init()
     t_tradelistdb = new CMPTradeList(GetDataDir() / "MP_tradelist", fReindex);
     s_stolistdb = new CMPSTOList(GetDataDir() / "MP_stolist", fReindex);
     p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", fReindex);
+    p_utdb = new CMPUniqueTokensDB(GetDataDir() / "MP_utdb", fReindex);
     _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo", fReindex);
 
     MPPersistencePath = GetDataDir() / "MP_persist";

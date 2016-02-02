@@ -3,6 +3,7 @@
 
 #include <string>
 
+// RPC Errors
 enum MPRPCErrorCode
 {
     //INTERNAL_1packet
