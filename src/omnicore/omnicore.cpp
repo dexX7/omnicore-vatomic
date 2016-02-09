@@ -2569,6 +2569,7 @@ void clear_all_state()
     p_txlistdb->Clear();
     s_stolistdb->Clear();
     t_tradelistdb->Clear();
+    p_utdb->Clear();
     assert(p_txlistdb->setDBVersion() == DB_VERSION); // new set of databases, set DB version
     exodus_prev = 0;
 }
@@ -3317,6 +3318,32 @@ void CMPTxList::recordSendAllSubRecord(const uint256& txid, int subRecordNumber,
     leveldb::Status status = pdb->Put(writeoptions, strKey, strValue);
     ++nWritten;
     if (msc_debug_txdb) PrintToLog("%s(): store: %s=%s, status: %s\n", __func__, strKey, strValue, status.ToString());
+}
+
+std::pair<int64_t,int64_t> CMPTxList::GetUniqueGrant(const uint256& txid)
+{
+    std::string strKey = strprintf("%s-UG", txid.ToString());
+    std::string strValue;
+    leveldb::Status status = pdb->Get(readoptions, strKey, &strValue);
+    if (status.ok()) {
+        std::vector<std::string> vstr;
+        boost::split(vstr, strValue, boost::is_any_of("-"), boost::token_compress_on);
+        if (2 == vstr.size()) {
+            return std::make_pair(boost::lexical_cast<int64_t>(vstr[0]), boost::lexical_cast<int64_t>(vstr[1]));
+        }
+    }
+    return std::make_pair(0,0);
+}
+
+void CMPTxList::RecordUniqueGrant(const uint256& txid, int64_t start, int64_t end)
+{
+    assert(pdb);
+
+    const string key = txid.ToString() + "-UG";
+    const string value = strprintf("%d-%d", start, end);
+
+    Status status = pdb->Put(writeoptions, key, value);
+    PrintToLog("%s(): Writing Unique Grant range %s:%d-%d (%s), line %d, file: %s\n", __FUNCTION__, key, start, end, status.ToString(), __LINE__, __FILE__);
 }
 
 void CMPTxList::recordPaymentTX(const uint256 &txid, bool fValid, int nBlock, unsigned int vout, unsigned int propertyId, uint64_t nValue, string buyer, string seller)

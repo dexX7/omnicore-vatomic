@@ -30,10 +30,12 @@ void populateRPCTypeGrant(CMPTransaction& omniObj, json_spirit::Object& txobj);
 void populateRPCTypeRevoke(CMPTransaction& omniOobj, json_spirit::Object& txobj);
 void populateRPCTypeChangeIssuer(CMPTransaction& omniObj, json_spirit::Object& txobj);
 void populateRPCTypeActivation(CMPTransaction& omniObj, json_spirit::Object& txobj);
+void populateRPCTypeSendUnique(CMPTransaction& omniObj, json_spirit::Object& txobj);
 
 void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extendedDetailsFilter, json_spirit::Object& txobj);
 void populateRPCExtendedTypeMetaDExTrade(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, json_spirit::Object& txobj);
 void populateRPCExtendedTypeMetaDExCancel(const uint256& txid, json_spirit::Object& txobj);
+void populateRPCExtendedTypeGrantUnique(const uint256& txid, json_spirit::Object& txobj);
 
 int populateRPCDExPurchases(const CTransaction& wtx, json_spirit::Array& purchases, std::string filterAddress);
 int populateRPCSendAllSubSends(const uint256& txid, json_spirit::Array& subSends);

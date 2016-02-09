@@ -90,6 +90,10 @@ private:
     uint32_t activation_block;
     uint32_t min_client_version;
 
+    // Unique Send
+    uint64_t unique_token_start;
+    uint64_t unique_token_end;
+
     // Indicates whether the transaction can be used to execute logic
     bool rpcOnly;
 
@@ -118,6 +122,7 @@ private:
     bool interpret_ChangeIssuer();
     bool interpret_Activation();
     bool interpret_Alert();
+    bool interpret_UniqueSend();
 
     /**
      * Logic and "effects"
@@ -140,6 +145,7 @@ private:
     int logicMath_ChangeIssuer();
     int logicMath_Activation();
     int logicMath_Alert();
+    int logicMath_UniqueSend();
 
     /**
      * Logic helpers
@@ -195,6 +201,8 @@ public:
     uint16_t getFeatureId() const { return feature_id; }
     uint32_t getActivationBlock() const { return activation_block; }
     uint32_t getMinClientVersion() const { return min_client_version; }
+    uint64_t getUniqueTokenStart() const { return unique_token_start; }
+    uint64_t getUniqueTokenEnd() const { return unique_token_end; }
 
     /** Creates a new CMPTransaction object. */
     CMPTransaction()
@@ -245,6 +253,8 @@ public:
         feature_id = 0;
         activation_block = 0;
         min_client_version = 0;
+        unique_token_start = 0;
+        unique_token_end = 0;
     }
 
     /** Sets the given values. */

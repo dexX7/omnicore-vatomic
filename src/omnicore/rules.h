@@ -104,6 +104,8 @@ public:
     int MSC_SEND_ALL_BLOCK;
     //! Block to enable betting transactions
     int MSC_BET_BLOCK;
+    //! Block to enable unique tokens
+    int OMNI_UNIQUE_BLOCK;
 
     //! Block to deactivate crowdsale participations when "granting tokens"
     int GRANTEFFECTS_FEATURE_BLOCK;

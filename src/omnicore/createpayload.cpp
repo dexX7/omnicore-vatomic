@@ -437,6 +437,26 @@ std::vector<unsigned char> CreatePayload_OmniCoreAlert(uint16_t alertType, uint3
     return payload;
 }
 
+std::vector<unsigned char> CreatePayload_SendUnique(uint32_t propertyId, uint64_t uniqueTokenStart, uint64_t uniqueTokenEnd)
+{
+    std::vector<unsigned char> payload;
+    uint16_t messageType = 5;
+    uint16_t messageVer = 0;
+    mastercore::swapByteOrder16(messageType);
+    mastercore::swapByteOrder16(messageVer);
+    mastercore::swapByteOrder32(propertyId);
+    mastercore::swapByteOrder64(uniqueTokenStart);
+    mastercore::swapByteOrder64(uniqueTokenEnd);
+
+    PUSH_BACK_BYTES(payload, messageVer);
+    PUSH_BACK_BYTES(payload, messageType);
+    PUSH_BACK_BYTES(payload, propertyId);
+    PUSH_BACK_BYTES(payload, uniqueTokenStart);
+    PUSH_BACK_BYTES(payload, uniqueTokenEnd);
+
+    return payload;
+}
+
 #undef PUSH_BACK_BYTES
 #undef PUSH_BACK_BYTES_PTR
 
