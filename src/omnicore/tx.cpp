@@ -1131,8 +1131,7 @@ int CMPTransaction::logicMath_UniqueSend()
     if (rangeStartOwner != sender || rangeEndOwner != sender || !contiguous) {
         PrintToLog("%s(): rejected: sender %s does not own the range being sent\n",
                 __func__,
-                sender,
-                property);
+                sender);
         return (PKT_ERROR_SEND -26);
     }
 

@@ -121,6 +121,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_getgrants", 0 },
     { "omni_getbalance", 1 },
     { "omni_getuniquetokens", 1 },
+    { "omni_getuniquetokenowner", 0 },
+    { "omni_getuniquetokenowner", 1 },
     { "omni_getproperty", 0 },
     { "omni_listtransactions", 1 },
     { "omni_listtransactions", 2 },

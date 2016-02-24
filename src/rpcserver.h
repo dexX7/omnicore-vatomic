@@ -232,6 +232,7 @@ extern json_spirit::Value omni_getactivations(const json_spirit::Array& params, 
 extern json_spirit::Value omni_getallbalancesforid(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_getbalance(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_getuniquetokens(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_getuniquetokenowner(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_gettransaction(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_listtransactions(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_getproperty(const json_spirit::Array& params, bool fHelp);

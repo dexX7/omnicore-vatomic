@@ -362,6 +362,7 @@ static const CRPCCommand vRPCCommands[] =
     { "omni layer (data retrieval)",         "omni_getallbalancesforid",        &omni_getallbalancesforid,        false,      true,       false },
     { "omni layer (data retrieval)",         "omni_getbalance",                 &omni_getbalance,                 false,      true,       false },
     { "omni layer (data retrieval)",         "omni_getuniquetokens",            &omni_getuniquetokens,            false,      true,       false },
+    { "omni layer (data retrieval)",         "omni_getuniquetokenowner",        &omni_getuniquetokenowner,        false,      true,       false },
     { "omni layer (data retrieval)",         "omni_gettransaction",             &omni_gettransaction,             false,      true,       false },
     { "omni layer (data retrieval)",         "omni_getproperty",                &omni_getproperty,                false,      true,       false },
     { "omni layer (data retrieval)",         "omni_listproperties",             &omni_listproperties,             false,      true,       false },
