@@ -2588,6 +2588,12 @@ int mastercore_init()
         return 0;
     }
 
+    if (!isNonMainNet()) {
+        std::string msg = "This prototype should not be used on mainnet. Please add testnet=1 to your configuration file or start with the --testnet or --regtest parameter.  Omni Core will now shutdown.\n";
+        PrintToConsole(msg);
+        AbortNode(msg, msg);
+    }
+
     PrintToConsole("Initializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
 
     PrintToLog("\nInitializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
