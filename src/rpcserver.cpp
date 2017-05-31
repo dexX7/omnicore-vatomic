@@ -361,6 +361,8 @@ static const CRPCCommand vRPCCommands[] =
     { "omni layer (data retrieval)",         "omni_getactivations",             &omni_getactivations,             true,       true,       false },
     { "omni layer (data retrieval)",         "omni_getallbalancesforid",        &omni_getallbalancesforid,        false,      true,       false },
     { "omni layer (data retrieval)",         "omni_getbalance",                 &omni_getbalance,                 false,      true,       false },
+    { "omni layer (data retrieval)",         "omni_getuniquetokens",            &omni_getuniquetokens,            false,      true,       false },
+    { "omni layer (data retrieval)",         "omni_getuniquetokenowner",        &omni_getuniquetokenowner,        false,      true,       false },
     { "omni layer (data retrieval)",         "omni_gettransaction",             &omni_gettransaction,             false,      true,       false },
     { "omni layer (data retrieval)",         "omni_getproperty",                &omni_getproperty,                false,      true,       false },
     { "omni layer (data retrieval)",         "omni_listproperties",             &omni_listproperties,             false,      true,       false },
@@ -406,6 +408,7 @@ static const CRPCCommand vRPCCommands[] =
     { "omni layer (transaction creation)",   "omni_sendclosecrowdsale",         &omni_sendclosecrowdsale,         false,      true,       true },
     { "omni layer (transaction creation)",   "omni_sendchangeissuer",           &omni_sendchangeissuer,           false,      true,       true },
     { "omni layer (transaction creation)",   "omni_sendall",                    &omni_sendall,                    false,      true,       true },
+    { "omni layer (transaction creation)",   "omni_sendunique",                 &omni_sendunique,                 false,      true,       true },
 
     /* Omni Core hidden calls - development usage (not shown in help) */
     /* CATEGORY                              NAME                               ACTOR (FUNCTION)                  OKSAFEMODE  THREADSAFE  REQWALLET */

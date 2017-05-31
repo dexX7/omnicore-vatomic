@@ -206,6 +206,9 @@ void populateRPCTypeInfo(CMPTransaction& mp_obj, Object& txobj, uint32_t txType,
         case OMNICORE_MESSAGE_TYPE_ACTIVATION:
             populateRPCTypeActivation(mp_obj, txobj);
             break;
+        case OMNI_TYPE_SEND_UNIQUE:
+            populateRPCTypeSendUnique(mp_obj, txobj);
+            break;
     }
 }
 
@@ -231,6 +234,7 @@ bool showRefForTx(uint32_t txType)
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS: return true;
         case MSC_TYPE_SEND_ALL: return true;
         case OMNICORE_MESSAGE_TYPE_ACTIVATION: return false;
+        case OMNI_TYPE_SEND_UNIQUE: return true;
     }
     return true; // default to true, shouldn't be needed but just in case
 }
@@ -471,6 +475,16 @@ void populateRPCTypeGrant(CMPTransaction& omniObj, Object& txobj)
     txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
     txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
     txobj.push_back(Pair("amount", FormatMP(propertyId, omniObj.getAmount())));
+    CMPSPInfo::Entry sp;
+    {
+        LOCK(cs_tally);
+        if (!_my_sps->getSP(propertyId, sp)) {
+            return; // TODO : handle error
+        }
+    }
+    if (sp.unique) {
+        populateRPCExtendedTypeGrantUnique(omniObj.getHash(), txobj);
+    }
 }
 
 void populateRPCTypeRevoke(CMPTransaction& omniObj, Object& txobj)
@@ -495,6 +509,16 @@ void populateRPCTypeActivation(CMPTransaction& omniObj, Object& txobj)
     txobj.push_back(Pair("minimumversion", (uint64_t) omniObj.getMinClientVersion()));
 }
 
+void populateRPCTypeSendUnique(CMPTransaction& omniObj, Object& txobj)
+{
+    uint32_t propertyId = omniObj.getProperty();
+    txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
+    txobj.push_back(Pair("uniquetokenstart", omniObj.getUniqueTokenStart()));
+    txobj.push_back(Pair("uniquetokenend", omniObj.getUniqueTokenEnd()));
+    int64_t amount = (omniObj.getUniqueTokenEnd() - omniObj.getUniqueTokenStart()) + 1;
+    txobj.push_back(Pair("amount", amount));
+}
+
 void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extendedDetailsFilter, Object& txobj)
 {
     Array receiveArray;
@@ -503,6 +527,14 @@ void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extende
     s_stolistdb->getRecipients(txid, extendedDetailsFilter, &receiveArray, &tmpAmount, &stoFee);
     txobj.push_back(Pair("totalstofee", FormatDivisibleMP(stoFee))); // fee always MSC so always divisible
     txobj.push_back(Pair("recipients", receiveArray));
+}
+
+void populateRPCExtendedTypeGrantUnique(const uint256& txid, Object& txobj)
+{
+    LOCK(cs_tally);
+    std::pair<int64_t,int64_t> grantedRange = p_txlistdb->GetUniqueGrant(txid);
+    txobj.push_back(Pair("uniquetokenstart", FormatIndivisibleMP(grantedRange.first)));
+    txobj.push_back(Pair("uniquetokenend", FormatIndivisibleMP(grantedRange.second)));
 }
 
 void populateRPCExtendedTypeMetaDExTrade(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, Object& txobj)

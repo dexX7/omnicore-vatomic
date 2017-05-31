@@ -67,6 +67,8 @@ std::vector<TransactionRestriction> CConsensusParams::GetRestrictions() const
         { MSC_TYPE_SEND_ALL,                  MP_TX_PKT_V0,  false,   MSC_SEND_ALL_BLOCK },
 
         { MSC_TYPE_OFFER_ACCEPT_A_BET,        MP_TX_PKT_V0,  false,   MSC_BET_BLOCK      },
+
+        { OMNI_TYPE_SEND_UNIQUE,              MP_TX_PKT_V0,  true,    OMNI_UNIQUE_BLOCK  },
     };
 
     const size_t nSize = sizeof(vTxRestrictions) / sizeof(vTxRestrictions[0]);
@@ -159,6 +161,7 @@ CMainConsensusParams::CMainConsensusParams()
     MSC_METADEX_BLOCK = 999999;
     MSC_SEND_ALL_BLOCK = 999999;
     MSC_BET_BLOCK = 999999;
+    OMNI_UNIQUE_BLOCK = 999999;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
     DEXMATH_FEATURE_BLOCK = 999999;
@@ -194,6 +197,7 @@ CTestNetConsensusParams::CTestNetConsensusParams()
     MSC_METADEX_BLOCK = 0;
     MSC_SEND_ALL_BLOCK = 0;
     MSC_BET_BLOCK = 999999;
+    OMNI_UNIQUE_BLOCK = 0;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
     DEXMATH_FEATURE_BLOCK = 999999;
@@ -229,6 +233,7 @@ CRegTestConsensusParams::CRegTestConsensusParams()
     MSC_METADEX_BLOCK = 0;
     MSC_SEND_ALL_BLOCK = 0;
     MSC_BET_BLOCK = 999999;
+    OMNI_UNIQUE_BLOCK = 0;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
     DEXMATH_FEATURE_BLOCK = 999999;

@@ -23,6 +23,7 @@
 #include "omnicore/sp.h"
 #include "omnicore/tally.h"
 #include "omnicore/tx.h"
+#include "omnicore/utdb.h"
 #include "omnicore/utils.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/version.h"
@@ -134,6 +135,7 @@ static int reorgRecoveryMaxHeight = 0;
 CMPTxList *mastercore::p_txlistdb;
 CMPTradeList *mastercore::t_tradelistdb;
 CMPSTOList *mastercore::s_stolistdb;
+CMPUniqueTokensDB *mastercore::p_utdb;
 
 // indicate whether persistence is enabled at this point, or not
 // used to write/read files, for breakout mode, debugging, etc.
@@ -2567,6 +2569,7 @@ void clear_all_state()
     p_txlistdb->Clear();
     s_stolistdb->Clear();
     t_tradelistdb->Clear();
+    p_utdb->Clear();
     assert(p_txlistdb->setDBVersion() == DB_VERSION); // new set of databases, set DB version
     exodus_prev = 0;
 }
@@ -2583,6 +2586,12 @@ int mastercore_init()
     if (mastercoreInitialized) {
         // nothing to do
         return 0;
+    }
+
+    if (!isNonMainNet()) {
+        std::string msg = "This prototype should not be used on mainnet. Please add testnet=1 to your configuration file or start with the --testnet or --regtest parameter.  Omni Core will now shutdown.\n";
+        PrintToConsole(msg);
+        AbortNode(msg, msg);
     }
 
     PrintToConsole("Initializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
@@ -2615,11 +2624,13 @@ int mastercore_init()
             boost::filesystem::path tradePath = GetDataDir() / "MP_tradelist";
             boost::filesystem::path spPath = GetDataDir() / "MP_spinfo";
             boost::filesystem::path stoPath = GetDataDir() / "MP_stolist";
+            boost::filesystem::path utdbPath = GetDataDir() / "MP_utdb";
             if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath);
             if (boost::filesystem::exists(txlistPath)) boost::filesystem::remove_all(txlistPath);
             if (boost::filesystem::exists(tradePath)) boost::filesystem::remove_all(tradePath);
             if (boost::filesystem::exists(spPath)) boost::filesystem::remove_all(spPath);
             if (boost::filesystem::exists(stoPath)) boost::filesystem::remove_all(stoPath);
+            if (boost::filesystem::exists(utdbPath)) boost::filesystem::remove_all(utdbPath);
             PrintToLog("Success clearing persistence files in datadir %s\n", GetDataDir().string());
             startClean = true;
         } catch (const boost::filesystem::filesystem_error& e) {
@@ -2631,6 +2642,7 @@ int mastercore_init()
     t_tradelistdb = new CMPTradeList(GetDataDir() / "MP_tradelist", fReindex);
     s_stolistdb = new CMPSTOList(GetDataDir() / "MP_stolist", fReindex);
     p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", fReindex);
+    p_utdb = new CMPUniqueTokensDB(GetDataDir() / "MP_utdb", fReindex);
     _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo", fReindex);
 
     MPPersistencePath = GetDataDir() / "MP_persist";
@@ -3312,6 +3324,32 @@ void CMPTxList::recordSendAllSubRecord(const uint256& txid, int subRecordNumber,
     leveldb::Status status = pdb->Put(writeoptions, strKey, strValue);
     ++nWritten;
     if (msc_debug_txdb) PrintToLog("%s(): store: %s=%s, status: %s\n", __func__, strKey, strValue, status.ToString());
+}
+
+std::pair<int64_t,int64_t> CMPTxList::GetUniqueGrant(const uint256& txid)
+{
+    std::string strKey = strprintf("%s-UG", txid.ToString());
+    std::string strValue;
+    leveldb::Status status = pdb->Get(readoptions, strKey, &strValue);
+    if (status.ok()) {
+        std::vector<std::string> vstr;
+        boost::split(vstr, strValue, boost::is_any_of("-"), boost::token_compress_on);
+        if (2 == vstr.size()) {
+            return std::make_pair(boost::lexical_cast<int64_t>(vstr[0]), boost::lexical_cast<int64_t>(vstr[1]));
+        }
+    }
+    return std::make_pair(0,0);
+}
+
+void CMPTxList::RecordUniqueGrant(const uint256& txid, int64_t start, int64_t end)
+{
+    assert(pdb);
+
+    const string key = txid.ToString() + "-UG";
+    const string value = strprintf("%d-%d", start, end);
+
+    Status status = pdb->Put(writeoptions, key, value);
+    PrintToLog("%s(): Writing Unique Grant range %s:%d-%d (%s), line %d, file: %s\n", __FUNCTION__, key, start, end, status.ToString(), __LINE__, __FILE__);
 }
 
 void CMPTxList::recordPaymentTX(const uint256 &txid, bool fValid, int nBlock, unsigned int vout, unsigned int propertyId, uint64_t nValue, string buyer, string seller)

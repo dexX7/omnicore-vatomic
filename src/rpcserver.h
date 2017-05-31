@@ -231,6 +231,8 @@ extern json_spirit::Value omni_getinfo(const json_spirit::Array& params, bool fH
 extern json_spirit::Value omni_getactivations(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_getallbalancesforid(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_getbalance(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_getuniquetokens(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_getuniquetokenowner(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_gettransaction(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_listtransactions(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_getproperty(const json_spirit::Array& params, bool fHelp);
@@ -273,6 +275,7 @@ extern json_spirit::Value omni_sendrevoke(const json_spirit::Array& params, bool
 extern json_spirit::Value omni_sendclosecrowdsale(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_sendchangeissuer(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_sendall(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_sendunique(const json_spirit::Array& params, bool fHelp);
 
 /* Omni Core hidden calls - development usage (not shown in help) */
 extern json_spirit::Value mscrpc(const json_spirit::Array& params, bool fHelp);

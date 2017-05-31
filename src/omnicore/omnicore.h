@@ -37,7 +37,7 @@ int const MAX_STATE_HISTORY = 50;
 #define TEST_ECO_PROPERTY_1 (0x80000003UL)
 
 // increment this value to force a refresh of the state (similar to --startclean)
-#define DB_VERSION 3
+#define DB_VERSION 4
 
 // could probably also use: int64_t maxInt64 = std::numeric_limits<int64_t>::max();
 // maximum numeric values from the spec:
@@ -67,6 +67,7 @@ enum TransactionType {
   MSC_TYPE_RESTRICTED_SEND          =  2,
   MSC_TYPE_SEND_TO_OWNERS           =  3,
   MSC_TYPE_SEND_ALL                 =  4,
+  OMNI_TYPE_SEND_UNIQUE             =  5,
   MSC_TYPE_SAVINGS_MARK             = 10,
   MSC_TYPE_SAVINGS_COMPROMISED      = 11,
   MSC_TYPE_RATELIMITED_MARK         = 12,
@@ -93,6 +94,7 @@ enum TransactionType {
 
 #define MSC_PROPERTY_TYPE_INDIVISIBLE             1
 #define MSC_PROPERTY_TYPE_DIVISIBLE               2
+#define OMNI_PROPERTY_TYPE_UNIQUE                 5
 #define MSC_PROPERTY_TYPE_INDIVISIBLE_REPLACING   65
 #define MSC_PROPERTY_TYPE_DIVISIBLE_REPLACING     66
 #define MSC_PROPERTY_TYPE_INDIVISIBLE_APPENDING   129
@@ -226,6 +228,8 @@ public:
     void recordMetaDExCancelTX(const uint256 &txidMaster, const uint256 &txidSub, bool fValid, int nBlock, unsigned int propertyId, uint64_t nValue);
     /** Records a "send all" sub record. */
     void recordSendAllSubRecord(const uint256& txid, int subRecordNumber, uint32_t propertyId, int64_t nvalue);
+    /** Records the range awarded in a grant applied to a unique property. */
+    void RecordUniqueGrant(const uint256 &txid, int64_t start, int64_t end);
 
     string getKeyValue(string key);
     uint256 findMetaDExCancel(const uint256 txid);
@@ -235,6 +239,7 @@ public:
     bool getPurchaseDetails(const uint256 txid, int purchaseNumber, string *buyer, string *seller, uint64_t *vout, uint64_t *propertyId, uint64_t *nValue);
     /** Retrieves details about a "send all" record. */
     bool getSendAllDetails(const uint256& txid, int subSend, uint32_t& propertyId, int64_t& amount);
+    std::pair<int64_t,int64_t> GetUniqueGrant(const uint256& txid);
     int getMPTransactionCountTotal();
     int getMPTransactionCountBlock(int block);
 
@@ -286,7 +291,6 @@ extern std::map<std::string, CMPTally> mp_tally_map;
 extern CMPTxList *p_txlistdb;
 extern CMPTradeList *t_tradelistdb;
 extern CMPSTOList *s_stolistdb;
-
 // TODO: move, rename
 extern CCoinsView viewDummy;
 extern CCoinsViewCache view;
